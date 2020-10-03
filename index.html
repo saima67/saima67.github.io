@@ -1,0 +1,236 @@
+
+<HTML>
+<HEAD>
+   <TITLE>This is a RSA Calculator</TITLE>
+
+<SCRIPT Language="JavaScript">
+
+	
+		function mod( m, n )
+		{			
+			return m - n*Math.floor(m/n)
+		}
+	
+	
+	
+		function OldPowerMod(x,n,m)
+		
+		{
+			var p = 1
+			for ( i=0; i<n; i++ )
+				p = mod( (p*x),m )
+			return p
+		}
+	  
+	
+		function PowerMod(x,p,N)
+		
+		{
+			var A = 1
+			var m = p
+			var t = x
+			
+			while( m > 0 )
+			{
+				k = Math.floor( m/2 )
+				r = m - 2*k
+				if( r == 1 )
+					A = mod( A*t, N )
+				t = mod( t*t, N )
+				m = k
+			}			
+			return A
+		}
+	  
+	
+	
+		function Factorize(n)
+		{
+			var temp = ""
+			var T = n
+			var PRIME = 1
+			
+			var i=1
+			while( (T>1) && ( ++i < Math.sqrt(n)+1 ) )
+			{
+				while ( mod(T,i)==0 )
+				{
+					T = T/i
+					if( PRIME == 0 ) temp += "*"
+					if( PRIME == 1 ) PRIME = 0
+					temp += i
+				}
+			}
+			
+			if( PRIME == 1 ) 
+				temp = " is prime."
+			else if( T>1 )
+				temp += "*" + T
+				
+			return temp
+		}
+		
+	
+		function GCD(m,n)
+		{
+			while( m != n )
+			{
+				if( m == 1 || n == 1)
+					return 1
+				else if ( m < n )
+					n = mod(n,m)
+				else
+					m = mod(m,n)
+			}	
+			return m
+		}
+		
+	
+		function Candidates(form)
+		{
+			var temp = ""           
+			var r = -form.r.value   
+			var n = - (r-1)         
+			var line = ""
+			
+			for( i=0; i<30; i++ )
+			{
+				if (line.length > 50)
+				{
+					temp += line + "\n"
+					line = ""
+				}
+				line += n + " "
+				n = n - r
+			}
+			
+			return temp + line
+		}
+
+	
+		function ComputeNr(form)
+		{
+			var p = form.p.value
+			var q = form.q.value
+			form.N.value = p*q
+			form.r.value = (p-1)*(q-1)
+			form.ed.value = Candidates(form)
+			return ""
+		}
+
+
+	
+		function ComputeED(form)
+		{
+			form.factors.value = Factorize(form.K.value)
+			return ""
+		}
+
+	
+		function CheckED(form)
+		{
+			var temp = ""
+			var e = form.e.value
+			var d = form.d.value
+			var r = form.r.value
+			var N = form.N.value
+			
+			temp += "      e   = " + e + "\n"
+			temp += "      d   = " + d + "\n"
+			temp += "      N   = " + N + "\n"
+			temp += "      r   = " + r + "\n"
+			temp += "      e*d = " + eval(e*d) + "\n"
+			temp += "e*d mod r = " + mod((e*d),r) + "\n"
+
+			if( GCD(e,r) == 1 ) 
+				temp += "e and r are relatively prime\n"
+			else
+				temp += "e and r are not relatively prime; gcd(e,r) = " + GCD(e,r) + "\n"
+
+			if( GCD(d,r) == 1 ) 
+				temp += "d and r are relatively prime\n"
+			else
+				temp += "d and r are not relatively prime; gcd(d,r) = " + GCD(d,r) + "\n"
+
+			form.checker.value = temp
+			return ""
+		}
+
+		function CheckCode(form)
+		{
+			var temp = ""
+			var e = form.e.value
+			var d = form.d.value
+			var N = form.N.value
+			var M = form.Msg.value
+
+			form.Cipher.value = PowerMod(M,e,N)
+			
+			var C = form.Cipher.value
+            
+			form.Decipher.value = PowerMod(C,d,N)
+
+			return ""
+            
+		}
+
+
+</SCRIPT>
+
+</HEAD>
+
+<BODY
+    style="background-color:palegoldenrod; text-align:center">
+
+<H1  style="color:darkred;text-align:center">
+    Encryption & Decryption Calculator Using RSA Algorithm</H1>
+
+
+
+<FORM action="" method="POST">
+
+
+	
+	<P  style="color:darkred;" ><B>p:</B> <INPUT TYPE="text" NAME="p" VALUE="" SIZE=50  
+        style="color:darkred;" ><B>q:</B> <INPUT TYPE="text" NAME="q" VALUE="" SIZE=50></P>
+
+
+        <P <B><INPUT style="color:darkred" TYPE="button" NAME="pqNr" VALUE="Set the values of p & q" onclick="ComputeNr(this.form)"></B></P>
+	
+	
+	
+
+	
+	<P style="color:darkred;"><B>N = p*q:</B> <INPUT TYPE="text" NAME="N" VALUE="" SIZE=15> 
+	<P style="color:darkred;"><B>φ(n)= r = (p-1)*(q-1):</B><INPUT TYPE="text" NAME="r" VALUE="" SIZE=15>
+	<P style="color:darkred;"><B>Candidates (1 mod r) are shown in the below area:</B><P> <TEXTAREA NAME="ed" ROWS=8 COLS=60 ></TEXTAREA>
+	<P style="color:darkred;"><B>K:<INPUT TYPE="text" NAME="K" VALUE="" SIZE=15></B>
+	<P style="color:darkred;">
+	<P style="color:darkred;"><B>factors of K: <INPUT TYPE="text" NAME="factors" VALUE="" SIZE=25></B>
+        <B><INPUT style="color:darkred" TYPE="button" NAME="ed2" VALUE="Factor K" onclick="ComputeED(this.form)"></B>
+	<P style="color:darkred;">
+	<P style="color:darkred;">Use the factorization info above to factor <B>K</B> into two numbers,
+	<B>e</B> and <B>d</B>.  
+	 To check correctness,click the button (check e & d ): 
+	<P style="color:darkred">
+    <B>e:</B> <INPUT  TYPE="text" NAME="e" VALUE="" SIZE=15></B>
+	<B>d:</B> <INPUT  TYPE="text" NAME="d" VALUE="" SIZE=15></B></P>
+    <B> <INPUT style="color:darkred" TYPE="button" NAME="ed3" VALUE="Check e & d" onclick="CheckED(this.form)"></B>
+	<P style="color:darkred;"><B>Check Consistency:See below area</B><P> <TEXTAREA NAME="checker" ROWS=8 COLS=60 > </TEXTAREA>
+        
+	<P style="color:darkred;" >
+	If e and d are acceptable,then see the messages, 
+	"e*d mod r = 1", 
+            "e and r are relatively prime", and "d and r are relatively prime" 
+	
+   <P style="color:darkred;"><B>[Please include message in a numeric form and "Message" shouldn't be larger than "N]<P style="color:darkred;"><B>Enter Message: <INPUT TYPE="text" NAME="Msg" VALUE="" SIZE=100></P></B>
+       <P style="color:darkred;"><B><INPUT style="color:darkred" TYPE="button" NAME="ed4" VALUE  ="Encryption/Decryption" onclick="CheckCode(this.form)"<B></P>
+            
+	<P style="color:darkred;"><B>Encrypted Data:<INPUT TYPE="text" NAME="Cipher" VALUE="" SIZE=100></B>
+        <P style="color:darkred;"><B>Decrypted Data:<INPUT TYPE="text" NAME="Decipher" VALUE="" SIZE=100></B></P>
+   
+	
+	
+</FORM>
+</BODY>
+</HTML>
